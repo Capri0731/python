@@ -18,6 +18,7 @@ sizes=input("How big do you want?(*)")
 animal.scale=float(sizes)
 msg=("I'm a(an)"+ animals+ ", my size is "+ str(animal.scale))
 print(msg)
+
 animal.x=640
 animal.y=320
 window.run()
