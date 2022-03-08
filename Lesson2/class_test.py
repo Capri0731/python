@@ -8,6 +8,7 @@ class Owl(Sprite):
         self.goto_random_position()
         self.set_random_color()
         self.layer=randint(0,2)
+        
 
 class Fireball(Sprite):
     def on_create(self):
@@ -15,10 +16,11 @@ class Fireball(Sprite):
         self.goto_random_position()
         self.set_random_color
     
-for i in range(100):
+    
+for i in range(3):
     w.create_sprite(Owl)
     
-for i in range(500):
+for i in range(2):
     w.create_sprite(Fireball)
 
 w.run()
