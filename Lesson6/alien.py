@@ -14,9 +14,9 @@ class Ufo(Sprite):
          self.y=560
          self.scale=0.2
          self.rotation_mode=RotationMode.RIGHT_LEFT
-         self.score=0
+         self.score=99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
      def on_update(self, dt):
-         self.move_forward(20)
+         self.move_forward(1)
          if self.is_touching_window_edge():
              self.rotation+=180
 class Alien(Sprite):
@@ -59,7 +59,7 @@ class Alien(Sprite):
 label=w.create_label()        
 def creates():
     w.create_sprite(Alien)
-Scheduler.update(creates , 1.5)
+Scheduler.update(creates , 0.000000000000000000000000000000000000000000000000001)
 
 ufo=w.create_sprite(Ufo)
 w.run()
