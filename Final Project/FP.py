@@ -1,6 +1,8 @@
-from asyncio import shield
-from pycat.core import Window, Sprite, KeyCode, Color, RotationMode
+
+from pycat.core import Window, Sprite, KeyCode, Color, RotationMode, Label
+from pycat.base.event import MouseEvent, MouseButton
 from random import randint
+
 w=Window()
 class Line(Sprite):
     def on_create(self):
@@ -24,10 +26,12 @@ class PlayerR(Sprite):
         self.speed = 10
         self.x=1100
         self.y=320
+        self.time=0
         self.add_tag("red")
         self.image="images/PlayerRed.png"
         self.lives=151
     def on_update(self, dt):
+        self.time+=dt
         self.rotation_mode=self.rotation_mode=RotationMode.RIGHT_LEFT
         if w.is_key_pressed(KeyCode.UP):
             self.move_forward(self.speed)
@@ -48,7 +52,15 @@ class PlayerR(Sprite):
     def on_left_click_anywhere(self):
         bulletr=w.create_sprite(PlayerRbullet)
         bulletr.point_toward_mouse_cursor()
-    
+        bulletr.rotation+=randint(-4,4)
+    def on_click_anywhere(self, m: MouseEvent):
+        if self.time>0.6:
+            if m.button==MouseButton.RIGHT:
+               k=w.create_sprite(Knife)
+               k.point_toward_mouse_cursor()
+               k.rotation-=180
+               self.time=0
+               
     
         
         
@@ -70,6 +82,8 @@ class PlayerRbullet(Sprite):
         if self.is_touching_any_sprite_with_tag("blue"):
             self.delete()
             blue.lives-=2
+        if self.is_touching_any_sprite_with_tag("shd"):
+            self.delete()
         
 class Key(Sprite):
     def on_create(self):
@@ -128,7 +142,7 @@ class PlayerB(Sprite):
         if self.lives<0:
             w.close()
             print("red win")
-
+             
 
 class PlayerBbullet(Sprite):
     def on_create(self):
@@ -147,7 +161,7 @@ class PlayerBbullet(Sprite):
 class Tower(Sprite):
     def on_create(self):
         self.image="images/Tower.png"
-        self.scale=0.6
+        self.scale=0.3
         self.x=175
         self.lives=301
         self.y=150
@@ -162,25 +176,76 @@ class Shield(Sprite):
     def on_create(self):
         self.is_visible=False
         self.image="images/Shield.png"
-        self.goto(Tower)
+        self.goto(twr)
         self.time=0
+        self.add_tag("shd")
         self.able=True
+        self.scale=0.5
+    def on_update(self, dt):
+        
+        if self.able:
+            if w.is_key_down(KeyCode.Q):
+               self.is_visible=True
+               self.able=False
+               self.time=0
+        else:
+            
+            if self.time<3:
+                self.time+= dt
+            else:
+                self.is_visible=False
+
+class PlayerRLife(Label):
+    def on_create(self):
+        self.color=Color.RGB(219,112,147)
+        self.text=str(red.lives)
+        
+    def on_update(self, dt: float):
+        self.text=str(red.lives)
+        self.x=red.x
+        self.y=red.y
+class PlayerBLife(Label):
+    def on_create(self):
+        self.color=Color.RGB(135,206,235)
+        self.text=str(blue.lives)
+        
+    def on_update(self, dt: float):
+        self.text=str(blue.lives)
+        self.x=blue.x
+        self.y=blue.y
+class TowerLife(Label):
+    def on_create(self):
+        self.color=Color.RGB(190,200,240)
+        self.text=str(twr.lives)
+        
+    def on_update(self, dt: float):
+        self.text=str(twr.lives)
+        self.x=twr.x
+        self.y=twr.y
+class Knife(Sprite):
+    def on_create(self):
+        self.image="images/knife.png"
+        self.scale=0.15
+        self.time=0
+        self.goto(red)
+        self.move_forward(-30)
+        self.y+=30
     def on_update(self, dt):
         self.time+=dt
-        if w.is_key_down(KeyCode.Q):
-            self.is_visible=True
-            if self.time>3:
-                self.is_visible=False
-                self.time=0
-                self.able=False
-        else:
-            self.time=0
+        if self.time>0.5:
+            self.delete()
+        
+
 
 
 
 w.create_sprite(Line)
 w.create_sprite(Key)
 twr=w.create_sprite(Tower)
+w.create_sprite(Shield)
 red=w.create_sprite(PlayerR)
 blue=w.create_sprite(PlayerB)
+w.create_label(PlayerRLife)
+w.create_label(PlayerBLife)
+w.create_label(TowerLife)
 w.run()
