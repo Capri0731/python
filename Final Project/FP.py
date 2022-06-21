@@ -19,6 +19,9 @@ class Line(Sprite):
             red.x=700
         if self.is_touching_any_sprite_with_tag("blue"):
             blue.x=560
+
+
+
         
 class PlayerR(Sprite):
     def on_create(self):
@@ -26,6 +29,7 @@ class PlayerR(Sprite):
         self.speed = 10
         self.x=1100
         self.y=320
+        self.lose=False 
         self.time=0
         self.add_tag("red")
         self.image="images/PlayerRed.png"
@@ -37,6 +41,7 @@ class PlayerR(Sprite):
             self.move_forward(self.speed)
             self.rotation=90
         if w.is_key_pressed(KeyCode.LEFT):
+
             self.move_forward(self.speed)
             self.rotation=180
         if w.is_key_pressed(KeyCode.DOWN):
@@ -47,18 +52,17 @@ class PlayerR(Sprite):
             self.rotation=0
         
         if self.lives<0:
-            w.close()
-            print("blue win~")
+            self.lose=True
     def on_left_click_anywhere(self):
         bulletr=w.create_sprite(PlayerRbullet)
         bulletr.point_toward_mouse_cursor()
         bulletr.rotation+=randint(-4,4)
     def on_click_anywhere(self, m: MouseEvent):
-        if self.time>0.6:
+        if self.time>0.7:
             if m.button==MouseButton.RIGHT:
-               k=w.create_sprite(Knife)
-               k.point_toward_mouse_cursor()
-               k.rotation-=180
+               w.create_sprite(Knife)
+               
+               
                self.time=0
                
     
@@ -71,19 +75,28 @@ class PlayerRbullet(Sprite):
         self.color=Color.RGB(randint(170,255), randint(0,255), randint(0,255))
         self.position=red.position
         self.add_tag("prb")
-        
+         
     def on_update(self, dt):
         self.move_forward(15)
         if self.is_touching_window_edge():
             self.delete()
-        if self.is_touching_any_sprite_with_tag("twr"):
-            self.delete()
-            twr.lives-=2              
-        if self.is_touching_any_sprite_with_tag("blue"):
-            self.delete()
-            blue.lives-=2
         if self.is_touching_any_sprite_with_tag("shd"):
             self.delete()
+        if tm.faster:
+            if self.is_touching_any_sprite_with_tag("twr"):
+                self.delete()
+                twr.lives-=3            
+            if self.is_touching_any_sprite_with_tag("blue"):
+                self.delete()
+                blue.lives-=4
+        else:
+            if self.is_touching_any_sprite_with_tag("twr"):
+                self.delete()
+                twr.lives-=2           
+            if self.is_touching_any_sprite_with_tag("blue"):
+                self.delete()
+                blue.lives-=2
+        
         
 class Key(Sprite):
     def on_create(self):
@@ -102,8 +115,7 @@ class Key(Sprite):
         elif self.time>1:
             self.is_visible=False
         if self.is_touching_any_sprite_with_tag("blue"):
-            w.close()
-            print("blue win")
+            red.lose=True
 class PlayerB(Sprite):
     def on_create(self):
         self.scale=0.3
@@ -111,8 +123,9 @@ class PlayerB(Sprite):
         self.rotation_speed = 3.75
         self.x=200
         self.y=320
-        self.lives=101
+        self.lives=131
         self.time=0
+        self.lose=False
         self.add_tag("blue")
         self.image="images/PlayerBlue.PNG"
         self.rotation_mode = RotationMode.ALL_AROUND
@@ -140,8 +153,8 @@ class PlayerB(Sprite):
         
             
         if self.lives<0:
-            w.close()
-            print("red win")
+            self.lose=True
+            
              
 
 class PlayerBbullet(Sprite):
@@ -157,7 +170,10 @@ class PlayerBbullet(Sprite):
             self.delete()
         if self.is_touching_any_sprite_with_tag("red"):
             self.delete()
-            red.lives-=2
+            if tm.faster:
+                red.lives-=4
+            else:
+                red.lives-=2
 class Tower(Sprite):
     def on_create(self):
         self.image="images/Tower.png"
@@ -170,8 +186,7 @@ class Tower(Sprite):
         
             
         if self.lives<=0:
-            w.close()
-            print("red win")
+            blue.lose=True
 class Shield(Sprite):
     def on_create(self):
         self.is_visible=False
@@ -194,7 +209,6 @@ class Shield(Sprite):
                 self.time+= dt
             else:
                 self.is_visible=False
-
 class PlayerRLife(Label):
     def on_create(self):
         self.color=Color.RGB(219,112,147)
@@ -227,20 +241,73 @@ class Knife(Sprite):
         self.image="images/knife.png"
         self.scale=0.15
         self.time=0
-        self.goto(red)
-        self.move_forward(-30)
         self.y+=30
+        self.point_toward_mouse_cursor()
     def on_update(self, dt):
         self.time+=dt
         if self.time>0.5:
             self.delete()
-        
-
-
-
+        self.y=red.y
+        self.x=red.x-30
+        if tm.faster:
+            if self.is_touching_any_sprite_with_tag("blue"):
+                self.delete()
+                blue.lives-=4
+            if self.is_touching_any_sprite_with_tag("shd"):
+                self.delete()
+            
+            if self.is_touching_any_sprite_with_tag("twr"):
+                self.delete()
+                twr.lives-=8
+        else:
+            if self.is_touching_any_sprite_with_tag("blue"):
+                self.delete()
+                blue.lives-=3
+            if self.is_touching_any_sprite_with_tag("shd"):
+                self.delete()
+            
+            if self.is_touching_any_sprite_with_tag("twr"):
+                self.delete()
+                twr.lives-=7
+class Timer(Label):
+    def on_create(self):
+        self.x=600
+        self.y=600
+        self.text="0"
+        self.time=0
+        self.faster=False
+        self.color=Color.RGB(221,160,221)
+    def on_update(self, dt: float):
+        self.time+=dt
+        self.text=str(round(self.time,2))
+        if self.time>10:
+            self.color=Color.RGB(178,34,34)
+            self.faster=True 
+class End(Label):
+    def on_create(self):
+        self.x=600
+        self.y=600
+        self.text=""
+        self.time=0
+        self.color=Color.RGB(255,235,205)
+    def on_update(self, dt: float):
+        if blue.lose:
+            tm.delete()
+            blue.delete()
+            red.delete()
+            twr.delete()
+            key.delete()
+            self.text="Red win~!"
+        if red.lose:
+            tm.delete()
+            blue.delete()
+            red.delete()
+            twr.delete()
+            key.delete()
+            self.text="Blue win~!"
 
 w.create_sprite(Line)
-w.create_sprite(Key)
+key=w.create_sprite(Key)
 twr=w.create_sprite(Tower)
 w.create_sprite(Shield)
 red=w.create_sprite(PlayerR)
@@ -248,4 +315,6 @@ blue=w.create_sprite(PlayerB)
 w.create_label(PlayerRLife)
 w.create_label(PlayerBLife)
 w.create_label(TowerLife)
+tm=w.create_label(Timer)
+w.create_label(End)
 w.run()
